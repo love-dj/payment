@@ -93,14 +93,14 @@
 直接在命令行下安装：
 
 ```bash
-composer require "riverslei/payment:*"
+composer require "love-dj/payment:*"
 ```
 
 通过项目配置文件方式安装：
 
 ```yaml
 "require": {
-    "riverslei/payment": "*"
+    "love-dj/payment": "*"
 }
 ```
 
@@ -590,114 +590,6 @@ desc | 企业付款到银行卡付款说明,即订单备注 | N
 trans_no | 商户订单号，需保持唯一（只允许数字[0~9]或字母[A~Z]和[a~z]最短8位，最长32位） | Y
 
 
-### 招商银行
-
-**配置文件模板**
-
-```php
-
-$config = [
-    'use_sandbox' => true, // 是否使用 招商测试系统
-
-    'branch_no' => 'xxx',  // 商户分行号，4位数字
-    'mch_id'    => 'xxxx', // 商户号，6位数字
-    'mer_key'   => 'xxxxxx', // 秘钥16位，包含大小写字母 数字
-
-    // 招商的公钥，建议每天凌晨2:15发起查询招行公钥请求更新公钥。
-    'cmb_pub_key' => 'xxxxx',
-
-    'op_pwd'    => 'xxxxx', // 操作员登录密码。
-    'sign_type' => 'SHA-256', // 签名算法,固定为“SHA-256”
-    'limit_pay' => 'A', // 允许支付的卡类型,默认对支付卡种不做限制，储蓄卡和信用卡均可支付   A:储蓄卡支付，即禁止信用卡支付
-
-    'notify_url' => 'https://dayutalk.cn/notify/cmb', // 支付成功的回调
-
-    'sign_notify_url' => 'https://dayutalk.cn/notify/cmb', // 成功签约结果通知地址
-    'sign_return_url' => 'https://dayutalk.cn', // 成功签约结果通知地址
-
-    'return_url' => 'https://dayutalk.cn', // 如果是h5支付，可以设置该值，返回到指定页面
-];
-```
-
-#### 支付请求参数
-
-字段 | 解释 | 必须
----|---|---
-date | 订单的日期，时间戳 | Y
-trade_no | 订单号,6-32位的数字和字母组合，由商户生成 | Y
-amount | 格式：xxxx.xx 固定两位小数，最大11位整数 | Y
-time_expire | 过期时候的时间戳 | Y
-return_param | 发送成功支付结果通知时，将原样返回商户 | N
-body | 显示在PC端扫码支付页面，pc支付才需要该参数 | N
-client_ip | 商户取得的客户IP，如果有多个IP用逗号”,”分隔。 | N
-sub_mch_id | 当前订单为商户的二级商户的订单时需要传送 | N
-sub_mch_name | 当前订单为商户的二级商户的订单时需要传送 | N
-sub_mch_tp_code | 当前订单为商户的二级商户的订单时需要传送；必须为数字或字母 | N
-sub_mch_tp_name | 当前订单为商户的二级商户的订单时需要传送 | N
-mode_type | 默认不设限制，允许微信支付。 | N
-agr_no | 客户协议号 | N
-merchant_serial_no | 协议开通请求流水号，开通协议时必填。 | N
-user_id | 用于标识商户用户的唯一ID | N
-mobile | 手机号码 | N
-lon | 经度 | N
-lat | 纬度 | N
-risk_level | 用户在商户系统内风险等级标识 | N
-
-#### 查询公钥请求参数
-
-> 不需要参数，直接条用即可
-
-
-#### 退款请求参数
-
-字段 | 解释 | 必须
----|---|---
-date | 商户订单日期，支付时的订单日期 格式：yyyyMMdd | Y
-trade_no | 商户订单号，支付时的订单号 | Y
-refund_no | 退款流水号,商户生成，同一笔订单内，同一退款流水号只能退款一次。可用于防重复退款。 | Y
-refund_fee | 退款金额,格式xxxx.xx，单位元 | Y
-reason | 退款描述 | N
-operator_id | 商户结账系统的操作员号，选填，若填了则会对操作员号和密码进行校验，若不填则不校验。 | N
-
-
-#### 查询订单请求参数
-
-字段 | 解释 | 必须
----|---|---
-type | 查询类型，A：按银行订单流水号查询（默认） B：按商户订单日期和订单号查询 | N
-transaction_id | 银行订单流水号,type=A时必填 | Y
-date | 商户订单日期，格式：yyyyMMdd | Y
-trade_no | type=B时必填商户订单号 | N
-operator_id | 商户结账系统的操作员号 | N
-
-#### 已结账单请求参数
-
-字段 | 解释 | 必须
----|---|---
-mode | 查询模式， bank：按照银行日期查询，默认； mch：按照商户日期查询 | Y
-start_time | 开始日期，时间戳 | Y
-end_time | 结束日期，时间戳 | Y
-operator_id | 操作员号,商户结账系统的操作员号 | Y
-next_key_value | 续传键值,长度只能为0或40；首次查询填“空”；后续查询，按应答报文中返回的nextKeyValue值原样传入。 | N
-
-#### 退款查询请求参数
-
-字段 | 解释 | 必须
----|---|---
-type | 查询类型 A：按银行退款流水号查单笔（默认） B：按商户订单号+商户退款流水号查单笔 C: 按商户订单号查退款 | Y
-trade_no | 	商户订单号 | Y
-date | 商户订单日期，时间戳 | Y
-refund_no | 商户退款流水号长度不超过20位 | Y
-bank_serial_no | 银行退款流水号长度不超过20位 | Y
-
-#### 对账单查询请求参数
-
-字段 | 解释 | 必须
----|---|---
-date | 商户订单日期，时间戳 | Y
-message_key | 交易流水，合作方内部唯一流水 | Y
-
-
 ## 设计支付系统
 
 `Payment` 解决了对接第三方渠道的各种问题，但是一个合理的支付完整系统该如何设计？估计大家还有很多疑问。关于支付系统的设计大家可以参考该项目：https://github.com/skr-shop/manuals
@@ -747,25 +639,6 @@ message_key | 交易流水，合作方内部唯一流水 | Y
 - [银行转账查询](https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=24_3)
 - [微信转账查询](https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_3)
 
-
-### 招商
-
-- [APP支付](http://openhome.cmbchina.com/PayNew/pay/doc/cell/app/SDKPayAPI)
-- [H5支付](http://openhome.cmbchina.com/PayNew/pay/doc/cell/H5/OneCardPayAPI)
-- [PC扫码支付](http://openhome.cmbchina.com/PayNew/pay/doc/cell/pc/GeneratePayPageAPI)
-- [二维码支付](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QRcodePayAPI)
-- [退款](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/RefundAPI)
-- [交易查询](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QuerySingleOrderAPI)
-- [退款查询](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QuerySettledRefund)
-- [查询协议](http://openhome.cmbchina.com/PayNew/pay/doc/cell/app/QueryProtocolAPI)
-- [取消协议](http://openhome.cmbchina.com/PayNew/pay/doc/cell/app/CancelProtocolAPI)
-- [查询入账明细](http://openhome.cmbchina.com/PayNew/pay/doc/cell/app/RecordedDetailsAPI)
-- [下载退款对账单](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/RefundQueryAPI)
-- [下载已结账单for商户](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QuerySettledOrderByMerchantDat)
-- [下载已结账单for银行](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QuerySettledOrderByBankDate)
-- [下载对账单](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/DownloadRecordedDetails)
-- [查询招行公钥](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QueryKeyAPI)
-
 # 贡献指南
 
 ## 代码设计
@@ -780,7 +653,6 @@ message_key | 交易流水，合作方内部唯一流水 | Y
 
 - [支付宝](https://docs.open.alipay.com/api_1)
 - [微信](https://pay.weixin.qq.com/wiki/doc/api/index.html)
-- [招商银行](http://openhome.cmbchina.com/paynew/pay/Home)
 
 # License
 
